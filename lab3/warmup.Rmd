@@ -1,0 +1,56 @@
+---
+title: "warmup"
+output: html_document
+date: "2024-01-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+### 1. Plant Height Vector
+```{r}
+plant_height <- c(30.7, 37.6, 28.4, NA, 33.2)
+```
+
+###2. Plant weight
+```{r}
+plant_weight <- c(4, 5.2, 3.7, NA, 4.6)
+```
+
+### 3. Labels fo data matix
+```{r}
+samples <- c("plant_1", "plant_2", "plant_3", "plant_4","plant_5")
+measurement <- c("height", "mass")
+```
+
+### 4. Combine data for height and weight
+```{r}
+plant_experiment <- c(plant_height,plant_weight)
+```
+
+###5. Build Data Matrix
+```{r}
+plant_experiment_matix <- matrix(plant_experiment, nrow = 5, byrow = F)
+plant_experiment_matix
+```
+### 6. Name Columns and Rows
+```{r}
+colnames(plant_experiment_matix) <- measurement
+rownames(plant_experiment_matix) <- samples
+plant_experiment_matix
+```
+### 7. Calculate th menas of each column
+```{r}
+plantmeans <- colMeans(plant_experiment_matix, na.rm=T)
+plantmeans
+```
+
+###8. Add this as new row
+```{r}
+plant_experiment_matix_final <- rbind(plant_experiment_matix,plantmeans)
+plant_experiment_matix_final
+```
+
