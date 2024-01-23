@@ -1,0 +1,41 @@
+---
+title: "LAB4 Warmup"
+output: html_document
+date: "2024-01-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+```{r}
+library(palmerpenguins)
+```
+
+```{r}
+penguins <- penguins
+```
+
+```{r}
+dim(penguins)
+```
+```{r}
+colnames(penguins)
+```
+
+###Figure Out how many individuals are on each island:
+```{r}
+table(penguins$island)
+```
+```{r}
+summary(penguins$island)
+```
+### Mean body mass for all indivuals
+
+```{r}
+mean(penguins$body_mass_g, na.rm = T)
+```
+
