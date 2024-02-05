@@ -1,0 +1,320 @@
+---
+title: "Midterm 1 Notes"
+author: "Maya Fujita"
+date: "2024-02-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###. Working Directory
+To set it, go to sessions and set working directory and custom, to figure out where you are use this command...
+```{r}
+getwd()
+```
+
+### Things to Load
+```{r}
+#dplyr is part of the tidyverse: used to transform data frames by extracting rearranging and summarising
+library(tidyverse)
+library(janitor)
+library(skimr)
+```
+
+### Uploading Data
+1. If it is already data from R just load the library
+```{r}
+# install.packages("palmerpenguins")
+library(palmerpenguins)
+```
+2. If it is a CSV that is on you computer
+```{r}
+```
+```{r}
+## mammal <- read_csv("data/mammal_lifehistories_v2.csv")
+```
+
+### Analyzing Data Structure
+1. Str() gives 
+  - dimensions of data frame
+  - type of data each varaible is (ie, character, numeric, etc)
+  - Names of variables
+```{r}
+# str(mammal)
+```
+2. If you are trying to figure out class of spcecific variable
+```{r}
+class(mammal$order)
+```
+3. If you wanted to change a class to a facotr and see the levels...
+```{r}
+mammal$order <- as.factor(mammal$order)
+```
+```{r}
+levels(mammal$order) # This shows you the different kinds of observations within this variable
+```
+4. More analysis
+```{r}
+glimpse(mammal) #gives rows and columnms, class of varaibles, and first couple of observations
+nrow(mammal) #gives you number of rows (also number of observations)
+ncol(mammal)# number of columns (number of variables)
+summary(mammal) #tells you how many obsercations are in different sections (if made into a factor), tells you min mean media max and 1Q and second Q for numeric variables
+dim(mammal)# gives dimension of data frame
+names(mammal)# gives names of columns or variables
+head(mammal)# prints the first n rows of the data fame with their variable name
+tail(mammal) # prints last n rows of data frame
+table(mammal$order) #tells you how many observations are in each different group of this column
+
+```
+
+### Selecting (Pulls out specific variables or columns)
+```{r}
+names(mammal)
+selectedmammal <- mammal %>% #this is a pipe (hold down command, shift and m) This tells are to look at the mammal data frame and every other command after that is in reference to the mammal data frame
+  select(order, family, Genus) # selecting these three specific columns, if this was not inside a pipe, select(mammal, order)
+
+#To add range of columns from this to this
+select(mammal, order: mass)
+
+# Selecting everything except certain columns
+select(mammal, -"order",-"family") #select all the columns but order and family
+
+```
+```{r}
+#Selecting columns with certain things in common
+
+#Selecting only columns that have length in the for example (doesnt work with this data frame but other it does)
+select(mammal,contains("length"))
+
+#Here are other selecting commands
+Options to select columns based on a specific criteria include:  
+1. ends_with() = Select columns that end with a character string  
+2. contains() = Select columns that contain a character string  
+3. matches() = Select columns that match a regular expression  
+4. one_of() = Select columns names that are from a group of names
+
+### Example of matching
+select(fish, matches("a.+er")) #selects columns that contain letter "a" and are followed by "er"
+```
+
+### Selecting based on class of data
+```{r}
+select_if(mammal, is.numeric)
+select_if(mammal, ~!is.numeric(.)) # selects all that are not numeric
+```
+
+### Figuring out if there are any NA in data
+```{r}
+anyNA(mammal)
+```
+### Cleaning Names:
+```{r}
+library(janitor)
+clean_names(mammal)
+#makes all variable names lowercase
+```
+### Cleaning Data
+```{r}
+#When naming columns, blank spaces are often added (don't do this, please). Here is a trick to remove these.  
+```{r}
+select_all(mammals, ~str_replace(., " ", "_"))
+```
+
+### Filter Data - this filters for rows rather columns
+```{r}
+#pulls out observations that have this specific observation for order
+filter(mammal, order == "Artiodactyla")
+filter(mammal, order != "Artiodactyla")# everything but this
+
+filter(mammal, mass>=50)
+
+#to filter between a range 
+filter(mammal, between(mass,20,30))
+
+#obersvations near a certain value but have to specify how close (tolerance for that value)
+filter(mammal, near(mass, 30, tol = 5)) #filter for observations with mass of 30 and 5 in each direction from 25-35
+
+
+```
+### And / or
+
+```{r}
+# this command filters for observations that are of this specific order and are larger than 40 lbs (satisfy both)
+filter(mammal, order == "Artiodactyla"& mass > 40)
+# this comman filters for oberservations that satisfy at least one of the conditions (OR)
+filter(mammal, order == "Artiodactyla"| mass > 40)
+
+Rules:  
+filter(condition1, condition2) #will return rows where both conditions are met.  
+filter(condition1, !condition2) #will return all rows where condition one is true but condition 2 is not.  
+filter(condition1 | condition2) #will return rows where condition 1 or condition 2 is met.  
+filter(xor(condition1, condition2) #will return all rows where only one of the conditions is met, and not when both conditions are met.  
+```
+
+
+### Piping + Arrange+ Mutate
+```{r}
+fish %>% # work with the fish data 
+  select(lakeid, radii_length_mm) %>% # pull out variables of interest
+  filter(between(radii_length_mm, 2,4)) %>% # observations between 2 and 4
+  filter(lakeid=="AL"|lakeid=="AR") %>% # only these lakes
+  arrange(desc(radii_length_mm)) # sort to make easier to read
+
+### Default for arrange is ascending order
+```
+
+Mutate allows us to create a new column from exsisting columns in the data frame
+```{r}
+fish %>% 
+  mutate(length_mm = length*10) %>% # mutate(name_of_new_column = name_of_exsisting_column function(*/+-))
+  select(fish_id, length, length_mm)
+
+### Mutate also allows up to changes all columns to lower case
+mammals %>% 
+  mutate_all((tolower))
+
+### Or if you wanted to specify certain columns to mutate
+mammals %>% 
+  mutate(across(c("order", "family"), tolower))
+
+```
+### If else
+```{r}
+###. Here we have the issue that people put NA values in as -999.00 instead of NA so we can use ifelse to mutate these values
+mammals %>% # referring to mammal dataframe
+  select(genus, species, newborn) %>% #selecting columns of interest
+  mutate(newborn_new = ifelse(newborn == -999.00, NA, newborn))%>%  # create new newborn column, in which if the value of newborn is -999.00 then put NA and if not leave it as value that already exsists in newborn column
+  arrange(newborn)
+```
+
+### Tabyl Function
+part of janitor (its version of table function) produces counts and percentages
+```{r}
+tabyl(mammal, order)
+```
+### Summary()
+```{r}
+# Summary() shows you mean median min max and quartiles of numeric data
+summary(mammal)
+```
+
+### skim()
+```{r}
+skim(mammal)
+# tells you mean, sd and other things aabout each variable
+```
+### Summarize
+allows you to do summaries for multiple variables at once
+```{r}
+#You want want to know the mean hours of sleep for mammals with a bodywt of over 200
+msleep %>% 
+  filter(bodywt>200) %>% 
+  summarize(mean_sleep_lg=mean(sleep_total)) #create a new title (mean_sleep_lg) that is the mean of sleep total for animals with a body weight above 200
+```
+```{r}
+msleep %>% 
+  filter(bodywt>200) %>% 
+  summarize(mean_sleep_lg = mean(sleep_total),
+            min_sleep_lg = min(sleep_total),
+            max_sleep_lg = max(sleep_total),
+            sd_sleep_lg = sd(sleep_total),
+            total=n())
+# total function tells you the total number of observations or rows so in this example 7 
+```
+
+### Figuring out how many distinct observations there are 
+```{r}
+#question might be how many distinct genera in msleep data
+
+msleep %>% 
+  summarize(n_genera=n_distinct(genus)) # this is going to count the number of genera in msleep
+```
+### group_by
+```{r}
+msleep %>%
+  group_by(vore) %>% #we are grouping by feeding ecology, a categorical variable
+  summarize(min_bodywt = min(bodywt),
+            max_bodywt = max(bodywt),
+            mean_bodywt = mean(bodywt),
+            total=n())
+
+### Takes each catergory in vore column and does min max and mean for body weight
+```
+ 
+ Another practice problem:
+```{r}
+msleep %>% 
+  group_by(order) %>% 
+  summarize(mean_brainwt=mean(brainwt),
+            total=n())
+```
+ 
+```{r}
+penguins %>% #Specifies the dataframe
+  group_by(island) %>% #group by each island
+  summarize(mean_body_mass = mean(body_mass_g), #for each island, what is the mean body mass and the total
+            total=n())
+```
+
+### want to know how many NAs are in each group
+```{r}
+penguins %>% 
+  group_by(island) %>% 
+  summarize(number_NAs = sum(is.na(body_mass_g)))
+# tells you how many NAs are in each island group
+```
+
+```{r}
+### Removes any NAs and recalculates mean 
+penguins %>% 
+  filter(!is.na(body_mass_g)) %>% # pull out all of the observations with a number
+  group_by(island) %>% 
+  summarize(mean_body_mass = mean(body_mass_g, na.rm = T))
+```
+
+### want to know the number of observations by species and island
+```{r}
+penguins %>% 
+  group_by(species, island) %>% 
+  summarize(n=n(), .groups= 'keep')#the .groups argument here just prevents a warning message
+```
+44 adelie on biscoe island
+56 adelie species on dream island
+Gentoo is only on biscoe island
+
+### Counts - determines how many observations you have within a column (combination of group_by and n())
+```{r}
+### SUPER IMPORTANT FOR EXAM - wanted to know how many penguins are on each island
+penguins %>% 
+  count(island, sort = T) #sort=T sorts the column in descending order
+```
+Another way to get same result:
+```{r}
+penguins %>% 
+  group_by(island) %>%
+    summarize(n=n())
+```
+Using count across multiple variables
+```{r}
+penguins %>% 
+  count(island, species, sort = T) # sort=T will arrange in descending order
+```
+
+### Across
+```{r}
+penguins %>%
+  summarize(distinct_species = n_distinct(species),
+            distinct_island = n_distinct(island),
+            distinct_sex = n_distinct(sex))
+
+### Cleaner way of saying this:
+penguins %>%
+  summarize(across(c(species, island, sex), n_distinct))
+
+### Another example:
+penguins %>%
+  summarize(across(contains("mm"), mean, na.rm=T))
+```
+
