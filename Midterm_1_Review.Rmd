@@ -55,6 +55,11 @@ mammal$order <- as.factor(mammal$order)
 ```{r}
 levels(mammal$order) # This shows you the different kinds of observations within this variable
 ```
+```{r}
+gabon <- gabon %>% 
+  mutate_if(is.character, factor)
+```
+
 4. More analysis
 ```{r}
 glimpse(mammal) #gives rows and columnms, class of varaibles, and first couple of observations
@@ -89,11 +94,11 @@ select(mammal, -"order",-"family") #select all the columns but order and family
 select(mammal,contains("length"))
 
 #Here are other selecting commands
-Options to select columns based on a specific criteria include:  
-1. ends_with() = Select columns that end with a character string  
-2. contains() = Select columns that contain a character string  
-3. matches() = Select columns that match a regular expression  
-4. one_of() = Select columns names that are from a group of names
+#Options to select columns based on a specific criteria include:  
+#ends_with() = Select columns that end with a character string  
+#contains() = Select columns that contain a character string  
+#matches() = Select columns that match a regular expression  
+#one_of() = Select columns names that are from a group of names
 
 ### Example of matching
 select(fish, matches("a.+er")) #selects columns that contain letter "a" and are followed by "er"
