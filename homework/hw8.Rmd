@@ -36,34 +36,86 @@ This homework loosely follows the tutorial of [R Ladies Sydney](https://rladiess
 
 1. Start by loading the data `sydneybeaches`. Do some exploratory analysis to get an idea of the data structure.
 ```{r}
-
+sydneybeaches <- read_csv("data/sydneybeaches.csv")
+```
+```{r}
+sydneybeaches
+```
+```{r}
+glimpse(sydneybeaches)
 ```
 
 If you want to try `here`, first notice the output when you load the `here` library. It gives you information on the current working directory. You can then use it to easily and intuitively load files.
 ```{r}
-#library(here)
+library(here)
 ```
 
 The quotes show the folder structure from the root directory.
 ```{r}
-#sydneybeaches <-read_csv(here("homework", "data", "sydneybeaches.csv")) %>% clean_names()
+sydneybeaches <-read_csv(here("homework", "data", "sydneybeaches.csv")) %>% clean_names()
 ```
 
 2. Are these data "tidy" per the definitions of the tidyverse? How do you know? Are they in wide or long format?
+```{r}
+sydneybeaches
+```
+No this data is not tidy because there are observations that should be variables, it is in the long format.
 
 3. We are only interested in the variables site, date, and enterococci_cfu_100ml. Make a new object focused on these variables only. Name the object `sydneybeaches_long`
+```{r}
+sydneybeaches_long <- sydneybeaches%>% 
+  select(site, date, enterococci_cfu_100ml)
+```
 
 4. Pivot the data such that the dates are column names and each beach only appears once (wide format). Name the object `sydneybeaches_wide`
+```{r}
+sydneybeaches_wide <- sydneybeaches %>% 
+    select(site, date, enterococci_cfu_100ml) %>% 
+  pivot_wider(names_from = "date",
+              values_from = "enterococci_cfu_100ml")
+sydneybeaches_wide
+```
 
 5. Pivot the data back so that the dates are data and not column names.
+```{r}
+sydneybeaches_wide %>% 
+  pivot_longer(-site,
+               names_to = "date",
+               values_to = "enterococci_cfu_100ml")
+```
+
 
 6. We haven't dealt much with dates yet, but separate the date into columns day, month, and year. Do this on the `sydneybeaches_long` data.
+```{r}
+sydneybeaches_long_seperate <- sydneybeaches_long %>% 
+  separate(date, into=c("month", "day", "year"), sep="/") 
+```
 
 7. What is the average `enterococci_cfu_100ml` by year for each beach. Think about which data you will use- long or wide.
+```{r}
+sydneybeaches_long_seperate %>% 
+  group_by(year) %>% 
+  summarize(mean_enterococci_cfu_100ml = mean(enterococci_cfu_100ml, na.rm = T))
+```
 
 8. Make the output from question 7 easier to read by pivoting it to wide format.
+```{r}
+sydneybeaches_long_seperate %>% 
+  group_by(year, site) %>% 
+  summarize(mean_enterococci_cfu_100ml = mean(enterococci_cfu_100ml, na.rm = T)) %>% 
+  pivot_wider(names_from = "year",
+              values_from = "mean_enterococci_cfu_100ml")
+```
 
 9. What was the most polluted beach in 2013?
+```{r}
+sydneybeaches_long_seperate %>% 
+  group_by(site) %>% 
+  filter(year == "2013") %>% 
+  summarize(max_polluted = max(enterococci_cfu_100ml)) %>% 
+  arrange(desc(max_polluted))
+```
+The most polluted beach was Little Bay Beach in 2013
 
 10. Please complete the class project survey at: [BIS 15L Group Project](https://forms.gle/H2j69Z3ZtbLH3efW6)
 
