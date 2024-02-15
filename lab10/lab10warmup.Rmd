@@ -1,0 +1,40 @@
+---
+title: "warmup_10"
+output: html_document
+date: "2024-02-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+1. loading malaria
+```{r}
+malaria <- read_csv("data/malaria.csv")
+```
+```{r}
+clean_names(malaria)
+```
+```{r}
+```
+
+
+```{r}
+malaria_long <- malaria %>% 
+  pivot_longer(-c(location_name, data_date,submitted_date, Province,District, newid),
+               names_to = "age class",
+               values_to = "cases")
+
+malaria_long
+```
+
+```{r}
+malaria_long %>% 
+  filter(data_date == "2020-07-30") %>% 
+  group_by(District) %>% 
+  summarise(tot_cases = sum(cases, na.rm=T)) %>% 
+  arrange(-tot_cases)
+```
+
