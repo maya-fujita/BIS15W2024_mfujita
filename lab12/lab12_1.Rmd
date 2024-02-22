@@ -60,22 +60,35 @@ homerange <- read_csv("data/Tamburelloetal_HomeRangeDatabase.csv", na = c("", "N
 ## Review
 1. Use the `homerange` data to make a boxplot that shows the range of `log10.mass` by taxonomic class.
 ```{r}
-
+homerange %>% 
+  ggplot(aes(x=class, y=log10.mass))+
+  geom_boxplot()+
+  labs(title = "Mas by Taxonomic Class")
+  
 ```
 
 2. Now, add a layer to this plot that fills color for each box by taxonomic class
 ```{r}
-
+homerange %>% 
+  ggplot(aes(x=class, y=log10.mass, fill=class))+
+  geom_boxplot()+
+  labs(title = "Mas by Taxonomic Class")
 ```
 
-3. Use `group` to show the range of `log10.mass` by taxonomic class.
+3. Use `group` to show the range of `log10.mass` by taxonomic.
 ```{r}
-
+homerange %>% 
+  ggplot(aes(x=class, y=log10.mass, group=taxon))+
+  geom_boxplot()+
+  labs(title = "Mas by Taxonomic Class")
 ```
 
-4. Use `fill` to show the range of `log10.mass` by taxonomic class with color codes.
+4. Use `fill` to show the range of `log10.mass` by taxonomic  with color codes.
 ```{r}
-
+homerange %>% 
+  ggplot(aes(x=class, y=log10.mass, fill=taxon))+
+  geom_boxplot()+
+  labs(title = "Mas by Taxonomic Class")
 ```
 
 ## Line plots
@@ -83,7 +96,27 @@ Line plots are great when you need to show changes over time. Here we look at th
 
 Let's start by making a clear x and y so we know what we are going to plot.
 ```{r}
-
+deserts %>% 
+  filter(species_id=="DM"|species_id=="DS") %>% 
+  mutate(year=as.factor(year)) %>% # change year to be a factor instead of numeric
+  group_by(year, species_id) %>% 
+  summarize(n=n(), .groups = "keep") %>% 
+  pivot_wider(names_from = species_id,
+              values_from = n)
+```
+```{r}
+deserts %>% 
+  filter(species_id=="DM"|species_id=="DS") %>% 
+  mutate(year=as.factor(year)) %>% # change year to be a factor instead of numeric
+  group_by(year, species_id) %>% 
+  summarize(n=n(), .groups = "keep") %>% 
+  ggplot(aes(x=year, y=n, group=species_id, color=species_id))+
+  geom_line()+
+  geom_point(shape=2)+ # you can experiment with shapes
+  theme(axis.text.x = element_text(angle = 60, hjust=1))+
+  labs(title = "Number of Samples for Species DM and DS",
+       x= "Year",
+       y= "n")
 ```
 
 ```{r}
@@ -97,7 +130,7 @@ What does the distribution of body mass look like in the `homerange` data?
 ```{r}
 homerange %>% 
   ggplot(aes(x = log10.mass)) +
-  geom_histogram()+ #we can adjust the number of bins with the bins argument
+  geom_histogram(bins = 20)+ #we can adjust the number of bins with the bins argument
   labs(title = "Distribution of Body Mass")
 ```
 
@@ -110,7 +143,7 @@ Let's rebuild the histogram, but this time we will specify the color and fill. D
 ```{r}
 homerange %>% 
   ggplot(aes(x = log10.mass)) +
-  geom_histogram(color = "black", fill = "turquoise4", bins=10)+
+  geom_histogram(color = "violetred4", fill = "lavenderblush2", bins=10)+#color is the outline
   labs(title = "Distribution of Body Mass")
 ```
 
@@ -135,23 +168,54 @@ homerange %>%
 ## Practice
 1. Make a histogram of `log10.hra`. Make sure to add a title.
 ```{r}
-
+homerange %>% 
+  ggplot(aes(x=log10.hra))+
+  geom_histogram(fill = "deepskyblue4", alpha = 0.3, color="black")+
+  labs(title = "Homerange Distribution")
 ```
 
 2. Now plot the same variable using `geom_density()`.
 ```{r}
-
+homerange %>% 
+  ggplot(aes(x=log10.hra))+
+  geom_density(fill = "deepskyblue4", alpha = 0.3, color="black")+
+  labs(title = "Homerange Distribution")
 ```
 
 3. Combine them both!
 ```{r}
-
+homerange %>% 
+  ggplot(aes(x=log10.hra))+
+  geom_histogram(aes(y=after_stat(density)), fill = "deepskyblue4", alpha = 0.3, color="black")+
+  geom_density(color="orange")+
+  labs(title = "Homerange Distribution")
 ```
+THE IDEA WITH COLOR IS TO CREATE CONSISTENCY THROUGHOUT REPORT
+
 
 ## Create Categories with mutate and case_when()
 `case_when()` is a very handy function from `dplyr` which allows us to calculate a new variable from other variables. We use `case_when()` within `mutate()` to do this.`case_when()` allows us to specify multiple conditions. Let's reclassify the body mass variable into a new factor variable with small, medium, and large animals. In this case, we are making a continuous variable into a categorical variable.  
 ```{r}
+glimpse(homerange)
+```
+```{r}
+homerange %>% 
+  select(log10.mass) %>% 
+  summarize(min=min(log10.mass),
+            max=max(log10.mass))
+```
+```{r}
+summary(homerange$log10.mass)
+```
 
+### GOING TO NEED TO DO THIS FOR MIDTERM
+```{r}
+homerange %>% 
+  mutate(mass_category=case_when(log10.mass<=1.75 ~ "small",
+                                 log10.mass>1.75&log10.mass<= 2.75 ~ "medium",
+                                 log10.mass>2.75 ~ "large")) %>% 
+  ggplot(aes(x=mass_category, fill=trophic.guild))+
+  geom_bar(position = "dodge")
 ```
 
 Here we check how the newly created body mass categories compare across `trophic.guild`. 
@@ -162,21 +226,47 @@ Here we check how the newly created body mass categories compare across `trophic
 ## Practice
 1. Use case_when() to make a new column `range_category` that breaks down `log10.hra` into very small, small, medium, and large classes based on quartile.
 ```{r}
-
+summary(homerange$log10.hra)
 ```
 
 ```{r}
 
+#install.packages("gtools")
+library(gtools)
+```
+```{r}
+quartiles <- quantcut(homerange$log10.hra)
+table(quartiles)
 ```
 
 2. Make a plot that shows how many and which taxonomic classes are represented in each `range_category`.   
 ```{r}
-
+homerange %>% 
+  mutate(range_category=case_when(log10.hra<3.65 ~"very small",
+                                  log10.hra>=3.65&log10.hra<=4.59 ~"small",
+                                  log10.hra>4.59 &log10.hra<=6.02 ~"medium",
+                                  log10.hra>6.02 ~"large"))
+```
+```{r}
+homerange %>% 
+  mutate(range_category=case_when(log10.hra<3.65 ~"very small",
+                                  log10.hra>=3.65&log10.hra<=4.59 ~"small",
+                                  log10.hra>4.59 &log10.hra<=6.02 ~"medium",
+                                  log10.hra>6.02 ~"large")) %>% 
+  ggplot(aes(x=range_category, fill=class))+
+  geom_bar(position="dodge",alpha=0.3, color="black")
 ```
 
 3. Isolate the small `range_category` and plot the range of `log10.mass` by taxonomic class.
 ```{r}
-
+homerange %>% 
+  mutate(range_category=case_when(log10.hra<3.65 ~"very small",
+                                  log10.hra>=3.65&log10.hra<=4.59 ~"small",
+                                  log10.hra>4.59 &log10.hra<=6.02 ~"medium",
+                                  log10.hra>6.02 ~"large")) %>% 
+  filter(range_category=="small") %>% 
+  ggplot(aes(x=class, y=log10.mass, fill=class))+
+  geom_boxplot()
 ```
 
 ## That's it, let's take a break!  
