@@ -33,6 +33,9 @@ surgery <- read_csv("data/surgery.csv")
 ```
 
 1. Use the summary function(s) of your choice to explore the data and get an idea of its structure. Please also check for NA's.
+```{r}
+glimpse(surgery)
+```
 
 2. Let's explore the participants in the study. Show a count of participants by race AND make a plot that visually represents your output.
 

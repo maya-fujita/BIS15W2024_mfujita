@@ -1,0 +1,304 @@
+---
+title: "Midterm 2 Cheat Sheet"
+author: "Maya Fujita"
+date: "2024-02-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###. NAs Lab 8
+```{r}
+miss_var_summary()#provides a clean summary of NAs across data frame
+```
+
+```{r}
+life_history <- life_history %>% 
+  mutate(max_life = na_if(max_life, 0)#replace all the 0s with NA in max_life variable
+```
+
+We can also use `miss_var_summary` with `group_by()`. This helps us better evaluate where NA's are in the data.
+```{r}
+life_history %>%
+  group_by(order) %>%
+  select(order, wean_mass) %>% 
+  miss_var_summary(order=T)
+```
+
+```{r}
+life_history %>% 
+  replace_with_na(replace = list(newborn = "not measured", 
+                                 weaning= -999, 
+                                 wean_mass= -999, 
+                                 afr= -999, 
+                                 max_life= 0, 
+                                 litter_size= -999, 
+                                 gestation= -999, 
+                                 mass= -999)) %>% 
+miss_var_summary()
+#makes replacement
+```
+
+### Dealing with NA in advance: Lab 8
+```{r}
+life_history_advance <- 
+  readr::read_csv(file = "data/mammal_lifehistories_v3.csv", 
+                  na = c("NA", " ", ".", "-999")) #all NA, blank spaces, .,and -999 are treated as NA
+```
+
+### Pivot_long Lab 9
+This is to transform data that looks like more columns then necessary so for example in this keep patient the same (that comlumn doesnt change) there is multiple columns that show the type of drug used.
+
+Often used to change data into form that can be used for graphs
+
+consolidating columns(variables)
+```{r}
+heartrate %>% 
+  pivot_longer(-patient, #patient will not move
+               names_to = "drug", #make a new column called "drug"
+               values_to="heartrate" #values moved to a new column called "heartrate"
+               )
+```
+Another example:
+```{r}
+billboard2 <- 
+  billboard %>% 
+  pivot_longer(wk1:wk76, # a range of columns taking all of those columns and making them observations
+               names_to = "week",
+               values_to = "rank", 
+               values_drop_na = TRUE #this will drop the NA's
+               )
+billboard2
+```
+
+```{r}
+billboard3 <- 
+  billboard %>% 
+  pivot_longer(-c(artist, track, date.entered), #specific columns to stay fixed
+               names_to = "week",
+               values_to = "rank",
+               values_drop_na = TRUE
+               )
+billboard3
+```
+
+```{r}
+billboard %>% 
+   pivot_longer(
+   cols = starts_with("wk"), #columns that start with "wk"
+   names_to = "week",
+   names_prefix = "wk",
+   values_to = "rank",
+   values_drop_na = TRUE)
+```
+
+###. Pivot_wider Lab 9
+Rules:  
++ `pivot_wider`(names_from, values_from)  
++ `names_from` - Values in the `names_from` column will become new column names  
++ `values_from` - Cell values will be taken from the `values_from` column  
+```{r}
+tb_data %>% 
+  pivot_wider(names_from = "key", #the observations under key will become new columns
+              values_from = "value") #the values under value will be moved to the new columns
+```
+
+##. Seperate and Unite Lab 9
+```{r}
+heartrate2 %>% 
+  separate(patient, into= c("patient", "sex"), sep = "_")
+```
+
+```{r}
+heartrate3 %>% 
+  unite(patient_sex, "patient", "sex", sep=" ")
+```
+
+###. Data Visualization Lab 10 and 11
+```{r}
+options(scipen=999)#cancels scientific notation for the session
+
+```
+
+for bar graphs - dont need to use count because it is built in
+```{r}
+homerange %>% 
+  ggplot(aes(trophic.guild)) + 
+  geom_bar() #good for counts
+```
+
+```{r}
+homerange %>% 
+  ggplot(aes(x=taxon, fill=trophic.guild))+
+  geom_bar(position="dodge")+# show counts of tropic guild within taxon group side by side
+  theme(axis.text.x = element_text(angle=60, hjust=1))+#angling labels on x axis
+  labs(title = "Observations by Taxon",
+       x="Taxonomic Group")
+```
+
+We can also scale all bars to a percentage.
+```{r}
+homerange %>% 
+  ggplot(aes(x = taxon, fill = trophic.guild))+
+  geom_bar(position = position_fill())+ 
+  scale_y_continuous(labels = scales::percent)+
+  coord_flip()
+```
+
+
+```{r}
+homerange %>% 
+  filter(taxon == "mammals") %>% 
+  count(trophic.guild) %>% 
+  ggplot(aes(x=trophic.guild, y=n))+
+  geom_col()+
+  coord_flip()# flips to see 
+```
+geom_bar-- one variable
+geom--col two variables usually one is the count (n)
+
+Both do similar thing
+
+For Scatter plots
+use color= to color by different categories
+```{r}
+iris %>% 
+  ggplot(aes(x=Sepal.Length, y=Sepal.Width, color=))+#color can also be shape= to have points be different shapes
+  geom_point(na.rm = T)+
+  geom_smooth(method = lm, se=T, na.rm = T)+
+  scale_x_log10()+#scales x axis by log
+  labs(title = "",
+       x="" ,
+       y="")+
+     theme(plot.title = element_text(size=rel(1.5),hjust = 0.5))+#rel(1.5)makes title 1.5 times bigger than x and y axis, hjust - 0 title on left, 0.5 title in middle and 1 - on the right
+  geom_point(size=.25)#adjust size of plot
+
+```
+
+Box plots - help visualize range of values, x axis = categorical and y axis is numeric
+
+create a data summary:
+```{r}
+homerange %>% 
+  group_by(class) %>% 
+  summarize(min_log10.mass=min(log10.mass),
+            max_log10.mass=max(log10.mass),
+            median_log10.mass=median(log10.mass))
+```
+
+```{r}
+homerange %>% 
+  ggplot(aes(x = class, y = log10.mass)) +# you can use fill here to color box plots differently 
+  geom_boxplot()
+```
+
+```{r}
+homerange %>% 
+  ggplot(aes(x = class, y = log10.mass, group = taxon)) +#or use group to make individual box plots for each taxon within class
+  geom_boxplot(alpha=0.4) #adds transparency
+```
+
+###. Line Plots
+```{r}
+```{r}
+deserts %>% 
+  filter(species_id=="DM"|species_id=="DS") %>% 
+  mutate(year=as.factor(year)) %>% # change year to be a factor instead of numeric
+  group_by(year, species_id) %>% 
+  summarize(n=n(), .groups = "keep") %>% 
+  pivot_wider(names_from = species_id,
+              values_from = n)
+```
+
+```{r}
+deserts %>% 
+  filter(species_id=="DM"|species_id=="DS") %>% 
+  mutate(year=as.factor(year)) %>% # change year to be a factor instead of numeric
+  group_by(year, species_id) %>% 
+  summarize(n=n(), .groups = "keep") %>% 
+  ggplot(aes(x=year, y=n, group=species_id, color=species_id))+
+  geom_line()+
+  geom_point(shape=2)+ # you can experiment with shapes
+  theme(axis.text.x = element_text(angle = 60, hjust=1))+
+  labs(title = "Number of Samples for Species DM and DS",
+       x= "Year",
+       y= "n")
+```
+
+###. Histogram
+```{r}
+homerange %>% 
+  ggplot(aes(x = log10.mass)) +
+  geom_histogram(bins = 20)+ #we can adjust the number of bins with the bins argument
+  labs(title = "Distribution of Body Mass")
+```
+
+###turning continuous variables into bar graph lab 12-1
+```{r}
+```{r}
+homerange %>% 
+  mutate(mass_category=case_when(log10.mass<=1.75 ~ "small",
+                                 log10.mass>1.75&log10.mass<= 2.75 ~ "medium",
+                                 log10.mass>2.75 ~ "large")) %>% 
+  ggplot(aes(x=mass_category, fill=trophic.guild))+
+  geom_bar(position = "dodge")
+```
+
+## Density plots  12-1
+Density plots are similar to histograms but they use a smoothing function to make the distribution more even and clean looking. They do not use bins.
+```{r}
+homerange %>% 
+  ggplot(aes(x = log10.mass)) +
+  geom_density(fill="deepskyblue4", alpha  =0.4, color = "black")+ #alpha is the transparency fill is the inside color and color is the lining color
+  labs(title = "Distribution of Body Mass")
+```
+
+## Legends 12-2
+There are lots of options to manipulate legends. Have a look [here](http://www.sthda.com/english/wiki/ggplot2-legend-easy-steps-to-change-the-position-and-the-appearance-of-a-graph-legend-in-r-software).
+```{r}
+p+theme_linedraw()+
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 60, hjust=1))+
+  labs(title = "Observations by Taxon in Homerange Data",
+       x = NULL, #removes label from x axis
+       y= "n",
+       fill= "Trophic Guild")
+```
+
+## Faceting
+[Faceting](https://ggplot2-book.org/facet.html) is one of the amazing features of ggplot. It allows us to make multi-panel plots for easy comparison.  Here is a boxplot that shows the range of log10.mass by taxon.
+```{r}
+homerange %>% 
+  ggplot(aes(x=taxon, y=log10.mass))+
+  geom_boxplot()+
+  theme(axis.text.x = element_text(angle = 60, hjust=1))
+```
+
+There are other categorical variables that might be interesting to overlay. `facet_wrap()` makes a ribbon of panels by a specified categorical variable and allows you to control how you want them arranged.  
+```{r}
+homerange %>% 
+  ggplot(aes(x=taxon, y=log10.mass))+
+  geom_boxplot()+
+  facet_wrap(~trophic.guild)
+  theme(axis.text.x = element_text(angle = 60, hjust=1))
+```
+
+`facet_grid()` allows control over the faceted variable; it can be arranged in rows or columns. rows~columns. 
+```{r}
+homerange %>% 
+  ggplot(aes(x=taxon, y=log10.mass))+
+  geom_boxplot()+
+  facet_grid(trophic.guild~.)#the side of .~ changes rows to columns
+  theme(axis.text.x = element_text(angle = 60, hjust=1))
+```
+
+`facet_grid()` will also allow the comparison of two categorical variables, just remember a~b where a is rows and b is columns.  
+```{r}
+homerange %>% 
+  ggplot(aes(x=taxon, y=log10.mass))+
+  geom_boxplot()+
+  facet_grid(trophic.guild~thermoregulation)+#the side of .~ changes rows to columns
+  theme(axis.text.x = element_text(angle = 60, hjust=1))
+```

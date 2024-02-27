@@ -30,6 +30,7 @@ output:
 #install.packages("RColorBrewer")
 #install.packages("paletteer")
 #install.packages("ggthemes")
+#install.packages("paletteer")
 ```
 
 ## Load the libraries
