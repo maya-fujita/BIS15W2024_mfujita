@@ -16,7 +16,7 @@ Push your final work to your repository. Your final lab report should be organiz
 
 Again make sure to use the formatting conventions of RMarkdown to make your report neat and clean!  
 
-
+###. Load Libraries
 ```{r}
 library(tidyverse)
 library(janitor)
@@ -24,91 +24,128 @@ library(dplyr)
 ```
 
 
-1.
+### 1. load data
 ```{r}
-blood_count <- read_csv("data/blood_count.csv")
+blood_count <- read_csv("data/blood_count_dataset.csv")
 ```
 
-2. 
+### 2. Look at the structure of data
 ```{r}
-glmpse(blood_count)
+glimpse(blood_count) # spelled wrong
 
 ```
 
-3. 
+###. Figure the min, mean and max red blood cell count for males and females respectively
 ```{r}
-blood_count %>% 
-  group_by(gender) %>% 
-  summarize(min=min(red_blood_cells)
-            mean=maen(red_blood_cells),
-            max=max(red_blood_cells)
+blood_count <- clean_names(blood_count)
 ```
 
+```{r}
+blood_count %>%
+  group_by(gender) %>% #group by gender
+  summarize(min = min(red_blood_cells), #summarize min mean and max for each gender
+            mean = mean(red_blood_cells),
+            max = max(red_blood_cells))
 
-4. 
+```
+
+###4. Create a vector of mean values for columns 3 to 9 in rows where the gender is "Male" in the blood_count dataset.
 ```{r}
 options(scipen = 999, digits = 2)
 
 blood_count %>% 
-  filter(Gender = "male") %>%
-  select[3:9] %>%
+  filter(gender == "Male") %>% #check capitalization, and filter use == not =
+  select(3:9) %>%
   colMeans(na.rm = TRUE)
 
 ```
 
-5. 
+###. Obtain the mean values for columns 3 to 9 in rows where the gender is specified as "Female" 
 ```{r}
-bloood_count %>% 
-  filter(Gender = "Female") />%
-  select[3:9] %>%
-  colMeans(na.rm = T)
+# The original code had syntax errors and incorrect capitalization.
+# Here's the corrected version with comments:
+
+# Correcting filter condition (use == for comparison), and correcting capitalization (Gender to gender)
+# Using %>% instead of />% for the pipe operator
+blood_count %>%
+  filter(gender == "Female") %>%
+  
+  # Correcting the function name, and using select() instead of select[]
+  select(3:9) %>%
+  
+  # Changing colMeans to summarise_all to calculate mean for all selected columns
+  summarise_all(mean, na.rm = TRUE)
+
 ```
 
 
-6. 
+### 6. Create a new column called Test with the values from the different tests then create a box plot that shows the range of values for each gender and then.The code aims to create boxplots for the blood count tests, specifically focusing on "Red Blood Cells" and differentiating by gender. The boxplots are facetted by the different blood count tests.
 ```{r}
-
+# Pivot the data longer for boxplot analysis
 blood_count %>%
-  pivot_wider(cols = [3:9], names_to = "Test", values_to = "Values") %>%
-  ggplot(aes(x = Gender, y = Values, fill = Gender)) +
+  pivot_longer(cols = c(mcv, mch, mchc), names_to = "Test", values_to = "Values") %>%
+  
+  # Plot boxplots
+  ggplot(aes(x = gender, y = Values, fill = gender)) +
   geom_boxplot() +
-  facet(~ Test, scales = "free") 
+  
+  # Facet the plot by Test, with scales free
+  facet_grid(~ Test, scales = "free") +
+  
+  # Add titles and labels
   labs(title = "Boxplot of Blood Count Tests",
-       x = "Test",
+       x = "Gender",
        y = "Values")
 
 ```
 
-7. 
+###7. create age groups based on specified age ranges and then displays the head of the grouped dataset.
+
+
 ```{r}
+# Create age groups based on age ranges
 grouped_bc <- blood_count %>%
-  change(Age_Group = case_when(
-    Age >= 20 & Age <= 29 ~ "20s",
-    Age >= 30 & Age <= 39 ~ "30s",
-    Age >= 40 & Age <= 49 ~ "40s",
-    Age >= 50 & Age <= 59 ~ "50s",
-    Age >= 60 & Age <= 70 ~ "60s")) # there were only 4 people in 70s, so I combined it with 60s
+  mutate(Age_Group = case_when(
+    age >= 20 & age <= 29 ~ "20s",
+    age >= 30 & age <= 39 ~ "30s",
+    age >= 40 & age <= 49 ~ "40s",
+    age >= 50 & age <= 59 ~ "50s",
+    age >= 60 ~ "60s"))  # Combined 60s and 70s due to fewer people in 70s
 
+# Display the head of the grouped dataset
 head(grouped_bc)
-
 ```
 
-8. 
+### 8. create boxplots for the blood count tests (MCV, MCH, MCHC) by age group
 ```{r}
-blood_count %>%
-  pivot_longer(cols = 3:9, names_to = "Test", values_to = "Values") %>%
-  ggplot(ase(x = Age_Group, y = values, fill = Age_Group)) +
+# Pivot the data longer for boxplot analysis
+grouped_bc %>%
+  pivot_longer(cols = c(mcv, mch, mchc), names_to = "Test", values_to = "Values") %>%
+  
+  # Plot boxplots
+  ggplot(aes(x = Age_Group, y = Values, fill = Age_Group)) +
   geom_boxplot() +
-  facet_wrap( Test, scales = "free") +  # Facet by the "Test" variable
+  
+  # Facet the plot by Test, with scales free
+  facet_wrap(~ Test, scales = "free") +
+  
+  # Add titles and labels
   labs(title = "Boxplot of Blood Count Tests by Age Group",
        x = "Age Group",
        y = "Values")
-
 ```
 9. What are two drawbacks and two benefits of AI?
 
+Drawbacks:
+1.It is not always correct and can lead you astray
+2. A person can become reliant on it and therefore learn less about the foundation of what they are doing and why they are doing it.
+
+Benefits:
+1. Makes coding much more efficient
+2. It can help correct little mistakes that people might not be able to catch very easily.
+
 10. Do you think you will use AI for coding in the future? Why or why not?
 
-
+Yes, I definetly think that I would use AI, as it can teach you new techniques and remind me of different commands I learned in the past that I might have forgotten.
 ## Push your final code to GitHub!
 Please be sure that you check the `keep md` file in the knit preferences. 
